@@ -1,0 +1,111 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-weight: "-2"
+  labels:
+  name: operator-install-job-hook
+rules:
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - clusterserviceversions
+  verbs:
+  - get
+  - list
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - "*"
+  resources:
+  - pods
+  verbs:
+  - list
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-weight: "-1"
+  labels:
+  name: operator-install-job-hook
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: operator-install-job-hook
+subjects:
+- kind: ServiceAccount
+  name: operator-install-job-hook
+  namespace: openshift-operators
+---
+apiVersion: v1
+imagePullSecrets:
+- name: registry-creds
+kind: ServiceAccount
+metadata:
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-weight: "-1"
+  name: operator-install-job-hook
+  namespace: openshift-operators
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-delete-policy: hook-succeeded
+    helm.sh/hook-weight: "1"
+  name: operator-install-job-hook
+  namespace: openshift-operators
+spec:
+  template:
+    spec: 
+      dnsPolicy: ClusterFirst
+      restartPolicy: OnFailure
+      serviceAccount: operator-install-job-hook
+      serviceAccountName: operator-install-job-hook
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: operator-install-job-hook
+          image: registry.access.redhat.com/ubi8/ubi
+          imagePullPolicy: IfNotPresent
+          env:
+          - name: SLEEP
+            value: "5"
+          command:
+            - /bin/bash
+            - -c
+            - |
+              # openshift-gitops-operator
+              echo "installing oc"
+              cd /tmp
+              curl --show-error --fail --remote-name https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/stable/openshift-client-linux.tar.gz
+              ls -alrt
+              tar xvf openshift-client-linux.tar.gz
+              ls -lart
+              echo "openshift-gitops-operator operator install"
+              CSV_STATUS="Pausing $SLEEP seconds..."
+              while [ "$CSV_STATUS" != "InstallSucceeded" ]; do
+                CSV_NAME=$(./oc get csv -n openshift-operators | egrep openshift-gitops-operator| awk '{print $1}')
+                echo "Waiting for the Operator to be ready. ($CSV_STATUS)"
+                sleep $SLEEP
+                CSV_STATUS=$( ./oc get csv -n openshift-operators $CSV_NAME -o jsonpath={..status.reason} )
+              done
+              echo "openshift-gitops-operator operator installed successfully"              
+              # openshift-virtualisation-operator
+              echo "openshift-virtualisation-operator operator install"
+              CSV_STATUS="Pausing $SLEEP seconds..."
+              while [ "$CSV_STATUS" != "InstallSucceeded" ]; do
+                CSV_NAME=$(./oc get csv -n openshift-cnv | egrep kubevirt-hyperconverged-operator | awk '{print $1}')
+                echo "Waiting for the Operator to be ready. ($CSV_STATUS)"
+                sleep $SLEEP
+                CSV_STATUS=$( ./oc get csv -n openshift-cnv $CSV_NAME -o jsonpath={..status.reason} )
+              done
+              echo "openshift-virtualisation-operator operator installed successfully"

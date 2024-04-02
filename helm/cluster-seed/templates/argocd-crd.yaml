@@ -1,0 +1,101 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  finalizers:
+  - argoproj.io/finalizer
+  # Changing the name affects the ClusterRoleBinding, the generated secret,
+  # route URL, and argocd.argoproj.io/managed-by annotations
+  name: openshift-gitops
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/compare-options: IgnoreExtraneous
+    helm.sh/hook: post-install
+spec:
+# Adding health checks to argocd to prevent pvc resources
+# that aren't bound state from blocking deployments
+  resourceHealthChecks:
+  - kind: PersistentVolumeClaim
+    check: |
+      hs = {}
+      if obj.status ~= nil then
+        if obj.status.phase ~= nil then
+          if obj.status.phase == "Pending" then
+            hs.status = "Healthy"
+            hs.message = obj.status.phase
+            return hs
+          elseif obj.status.phase == "Bound" then
+            hs.status = "Healthy"
+            hs.message = obj.status.phase
+            return hs
+          end
+        end
+      end
+      hs.status = "Progressing"
+      hs.message = "Waiting for PVC"
+      return hs
+  applicationInstanceLabelKey: argocd.argoproj.io/instance
+  configManagementPlugins: |
+    - name: kustomize-version
+      generate:
+        command: ["sh", "-c"]
+        args: ["kustomize version 1>&2 && exit 1"]
+    - name: kustomize-with-helm
+      generate:
+        command: ["kustomize"]
+        args: ["build", "--enable-helm"]
+  controller:
+    processors: {}
+    resources:
+      limits:
+        cpu: "4"
+        memory: 4Gi
+      requests:
+        cpu: 500m
+        memory: 2Gi
+  sso:
+    provider: dex
+    dex:
+      openShiftOAuth: true
+      resources:
+        limits:
+          cpu: 500m
+          memory: 256Mi
+        requests:
+          cpu: 250m
+          memory: 128Mi
+  initialSSHKnownHosts: {}
+  rbac:
+    defaultPolicy: role:admin
+  repo:
+    resources:
+      limits:
+        cpu: "1"
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+  resourceExclusions:
+  server:
+    autoscale:
+      enabled: false
+    grpc:
+      ingress:
+        enabled: false
+    ingress:
+      enabled: false
+    resources:
+      limits:
+        cpu: 500m
+        memory: 256Mi
+      requests:
+        cpu: 125m
+        memory: 128Mi
+    route:
+      enabled: true
+      tls:
+        insecureEdgeTerminationPolicy: Redirect
+        termination: reencrypt
+    service:
+      type: ""
+  tls:
+    ca: {}

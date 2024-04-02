@@ -1,0 +1,137 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    argocds.argoproj.io/name: openshift-gitops
+    argocds.argoproj.io/namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/managed-by: openshift-gitops
+    app.kubernetes.io/name: openshift-gitops
+    app.kubernetes.io/part-of: argocd
+  name: openshift-gitops-argocd-application-controller-custom
+rules:
+- apiGroups:
+  - maistra.io
+  resources:
+  - servicemeshcontrolplanes
+  verbs:
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - maistra.io
+  resources:
+  - servicemeshmemberrolls   
+  verbs:
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - project.openshift.io
+  resources:
+  - projects
+  verbs:
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - resourcequotas
+  - serviceaccounts
+  - services
+  - secrets
+  verbs:
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - networking.istio.io
+  resources:
+  - "*"
+  verbs:
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - security.istio.io
+  resources:
+  - "*"
+  verbs:
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - tekton.dev
+  resources:
+  - pipelines
+  - pipelineruns
+  verbs:
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - route.openshift.io
+  resources:
+  - routes
+  - routes/custom-host
+  verbs:
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - triggers.tekton.dev
+  resources:
+  - triggertemplates
+  - triggers
+  - triggerbindings
+  - eventlisteners
+  verbs:
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - autoscaling
+  resources:
+  - horizontalpodautoscalers
+  verbs:
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - datadoghq.com
+  resources:
+  - datadogagents
+  verbs:
+  - create
+  - update
+  - patch
+  - delete

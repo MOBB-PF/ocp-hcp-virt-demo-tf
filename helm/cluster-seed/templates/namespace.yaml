@@ -1,0 +1,19 @@
+{{ range $ns := .Values.namespaces -}}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-weight: "-1"
+  name: "{{ $ns.name }}"
+  {{- if $ns.annotations }}
+  annotations:
+    {{- toYaml $ns.annotations | trimPrefix "|" | indent 2 }}
+  {{ end }}
+  labels:
+  {{- if $ns.labels }}
+    {{- toYaml $ns.labels | trimPrefix "|" | indent 2 }}
+  {{ end }}
+---
+{{ end -}}

@@ -1,0 +1,33 @@
+---
+apiVersion: v1
+data:
+  insecure: dHJ1ZQ==
+  project: ZGVmYXVsdA==
+  type: Z2l0
+  url: aHR0cHM6Ly9naXRodWIuY29tL01PQkItUEYvcGF5bWVudHMtZ2l0b3Bz
+kind: Secret
+metadata:
+  annotations:
+    managed-by: argocd.argoproj.io
+  labels:
+    argocd.argoproj.io/secret-type: repository
+  name: repo-3728261057
+  namespace: openshift-gitops
+type: Opaque
+---
+apiVersion: v1
+data:
+  name: aGVsbQ==
+  project: ZGVmYXVsdA==
+  type: aGVsbQ==
+  url: aHR0cHM6Ly9tb2JiLXBmLmdpdGh1Yi5pby9oZWxtLXJlcG9zaXRvcnk=
+kind: Secret
+metadata:
+  annotations:
+    managed-by: argocd.argoproj.io
+  labels:
+    argocd.argoproj.io/secret-type: repository
+  name: repo-3796014482
+  namespace: openshift-gitops
+type: Opaque
+---

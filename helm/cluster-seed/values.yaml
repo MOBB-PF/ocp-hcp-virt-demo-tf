@@ -1,0 +1,34 @@
+nameOverride: ""
+fullnameOverride: ""
+namespaces:
+  - name: openshift-gitops
+  - name: openshift-cnv
+subscriptions:
+  - name: openshift-gitops-operator
+    namespace: openshift-operators
+    channel: latest
+    config:
+      env:
+      - name: DISABLE_DEFAULT_ARGOCD_INSTANCE
+        value: "true"
+    installPlanApproval: Automatic
+    source: redhat-operators
+    sourceNamespace: openshift-marketplace
+  - name: kubevirt-hyperconverged
+    namespace: openshift-cnv
+    channel: stable
+    installPlanApproval: Automatic
+    source: redhat-operators
+    sourceNamespace: openshift-marketplace 
+
+operatorGroups:
+  - name: openshift-cnv-49p9h
+    namespace: openshift-cnv
+    targetNamespace: openshift-cnv
+
+catalogSources: []
+  # - name: operatorhubio
+  #   sourceType: grpc
+  #   image: quay.io/operator-framework/upstream-community-operators:latest
+  #   displayName: Community Operators
+  #   publisher: OperatorHub.io
